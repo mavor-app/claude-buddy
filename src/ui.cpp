@@ -41,6 +41,18 @@ static void centerText(const char *s, int y, uint16_t color, uint8_t size) {
   gfx->print(s);
 }
 
+static void textAt(const char *s, int x, int y, uint16_t color, uint8_t size) {
+  gfx->setTextSize(size);
+  gfx->setTextColor(color, C_BG);
+  gfx->setCursor(x, y);
+  gfx->print(s);
+}
+
+// Right-aligned: the string ends at xRight.
+static void rightText(const char *s, int xRight, int y, uint16_t color, uint8_t size) {
+  textAt(s, xRight - (int)strlen(s) * 6 * size, y, color, size);
+}
+
 static void triggerOneShot(PersonaState s, uint32_t durMs) {
   oneShot = s;
   oneShotUntil = millis() + durMs;
@@ -108,18 +120,21 @@ static void drawHome() {
   snprintf(buf, sizeof(buf), "5h %s   today %s", k5, kt);
   centerText(buf, y, C_CYAN, 2); y += 34;
 
-  // bottom line: time + power + owner
-  char low[64]; low[0] = 0;
+  // Top row, one line: time (left) | hi {owner} (center) | power (right).
+  // Power: USB if plugged in, else battery % when a battery is present.
+  const int TOP_Y = 44, SIDE = 26;
   int hh, mm;
-  if (rtc::nowHM(hh, mm)) { char t[8]; snprintf(t, sizeof(t), "%02d:%02d  ", hh, mm); strcat(low, t); }
+  if (rtc::nowHM(hh, mm)) { char t[8]; snprintf(t, sizeof(t), "%02d:%02d", hh, mm); textAt(t, SIDE, TOP_Y, C_DIM, 2); }
+
   BatteryInfo b = power::read();
-  if (b.present)      { char t[16]; snprintf(t, sizeof(t), "%d%%%s", b.pct, b.mA < 0 ? "+" : ""); strcat(low, t); }
-  else if (b.usb)     strcat(low, "USB");
-  centerText(low, y, C_DIM, 2);
+  char pwr[12] = "";
+  if (b.usb)          strcpy(pwr, "USB");
+  else if (b.present) snprintf(pwr, sizeof(pwr), "%d%%%s", b.pct, b.mA < 0 ? "+" : "");
+  if (pwr[0]) rightText(pwr, W - SIDE, TOP_Y, C_DIM, 2);
 
   if (st::owner()[0]) {
     char g[40]; snprintf(g, sizeof(g), "hi %s", st::owner());
-    centerText(g, 40, C_DIM, 2);
+    centerText(g, TOP_Y, C_DIM, 2);
   }
 
   // DEBUG: connection + RX activity, so we can see if the desktop is actually
