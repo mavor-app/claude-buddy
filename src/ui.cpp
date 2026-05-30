@@ -7,6 +7,7 @@
 #include "power.h"
 #include "rtc.h"
 #include "usage.h"
+#include "sound.h"
 #include <Arduino_GFX_Library.h>
 
 // PersonaState — matches the species state-function order.
@@ -225,10 +226,19 @@ void onSnapshot() {
 
   if (st::pollLevelUp()) triggerOneShot(P_CELEBRATE, 3000);
 
-  if (g_state.prompt.active && !g_state.responseSent) {
-    g_state.promptArrivedMs = millis();   // (re)start the approval timer on first sight
+  // Chirp once per genuinely new prompt (by id), not every heartbeat.
+  static String lastPromptId;
+  if (g_state.prompt.active) {
+    if (g_state.prompt.id != lastPromptId) {
+      lastPromptId = g_state.prompt.id;
+      g_state.promptArrivedMs = millis();
+      g_state.responseSent = false;
+      sound::alert();                     // "permission needed" chirp
+    }
+  } else {
+    lastPromptId = "";
+    g_state.responseSent = false;
   }
-  if (!g_state.prompt.active) g_state.responseSent = false;
 }
 
 void onTurn(JsonDocument &d) {

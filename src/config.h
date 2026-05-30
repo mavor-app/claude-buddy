@@ -67,6 +67,17 @@
   #define BTN_DENY    10   // PWR   -> Deny / Back
 #endif
 
+// Audio: ES8311 codec (I2C) + I2S + power amp. Playback data -> DSDIN/GPIO40
+// (GPIO42/ASDOUT is the mic ADC output, not playback).
+#ifndef I2S_MCLK_PIN
+  #define I2S_MCLK_PIN 16
+  #define I2S_BCLK_PIN 41   // I2S_SCLK
+  #define I2S_WS_PIN   45   // I2S_LRCK
+  #define I2S_DOUT_PIN 40   // I2S_DSDIN -> ES8311 DAC
+  #define PA_EN_PIN    46   // PA_CTRL
+#endif
+#define ES8311_ADDR   0x18
+
 // ---------------------------------------------------------------------------
 // BLE — Nordic UART Service
 // ---------------------------------------------------------------------------

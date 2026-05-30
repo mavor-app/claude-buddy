@@ -11,6 +11,7 @@
 #include "ble_link.h"
 #include "protocol.h"
 #include "ui.h"
+#include "sound.h"
 
 AppState g_state;
 
@@ -86,6 +87,8 @@ void setup() {
   if (!display::begin()) Serial.println("[boot] WARNING: display init failed");
   touch::begin();
   rtc::begin();
+  sound::begin();                    // BEFORE ui — the codec only outputs when its
+                                     // first feed happens right after init, undisturbed
   ui::begin();
   ble::begin();
   setupButtons();
