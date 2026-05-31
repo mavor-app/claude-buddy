@@ -79,7 +79,7 @@ void setup() {
   delay(200);
   Serial.println("\n[boot] Claude Hardware Buddy");
 
-  setCpuFrequencyMhz(160);           // 240->160 MHz: noticeably cooler, ample for this
+  setCpuFrequencyMhz(80);    // 80MHz: big CPU power cut; ample for BLE+QSPI here
   g_state.bootMs = millis();
   st::begin();                       // stats + settings + names from NVS
 
@@ -111,14 +111,25 @@ void loop() {
   bool touched = pollTouch();
   bool panelOff = manageBrightness(touched);
 
-  // render+flush throttled to ~16 fps (buddy animates at 5 fps internally).
-  // When the panel is dimmed off, skip the (expensive) full-canvas flush.
+  // log battery % every 5s so we can watch the drain rate improve (AXP2101 has
+  // no current ADC, so % trend is our only readout).
+  static uint32_t lastPwr = 0;
+  if (millis() - lastPwr > 5000) {
+    lastPwr = millis();
+    BatteryInfo b = power::read();
+    Serial.printf("[pwr] %d%% %dmV usb=%d %uMHz panel=%s\n",
+                  b.pct, b.mV, b.usb, getCpuFrequencyMhz(), panelOff ? "off" : "on");
+  }
+
+  // Redraw only as fast as the buddy actually animates (5 fps); flushing more
+  // often just burns QSPI/CPU. Skip entirely when the panel is dimmed off.
   static uint32_t nextFrame = 0;
   uint32_t now = millis();
   if (!panelOff && (int32_t)(now - nextFrame) >= 0) {
-    nextFrame = now + 100;
+    nextFrame = now + 200;
     ui::render();
     display::flush();
   }
-  delay(2);
+  // Idle the CPU hard when the panel is off (nap); light touch otherwise.
+  delay(panelOff ? 120 : 8);
 }
