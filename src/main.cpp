@@ -116,7 +116,7 @@ void loop() {
   static uint32_t nextFrame = 0;
   uint32_t now = millis();
   if (!panelOff && (int32_t)(now - nextFrame) >= 0) {
-    nextFrame = now + 60;
+    nextFrame = now + 100;
     ui::render();
     display::flush();
   }

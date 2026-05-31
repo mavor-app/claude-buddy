@@ -106,12 +106,7 @@ bool begin() {
 
   ready = es8311_init();
   Serial.printf("[sound] %s\n", ready ? "ready" : "codec init failed");
-  if (ready) {
-    digitalWrite(PA_EN_PIN, HIGH);       // keep amp ON — re-enabling per play left
-                                         // it un-ramped, so later chirps were silent
-    delay(150);
-    alert();                             // boot confirmation = the clip
-  }
+  if (ready) alert();                    // boot chirp; playClip ramps + drops the amp
   return ready;
 }
 
@@ -149,20 +144,24 @@ static void playClip(const uint8_t *bytes, size_t nbytes, float gain) {
   if (!ready) return;
   const int16_t *src = (const int16_t *)bytes;
   size_t n = nbytes / 2;
-  digitalWrite(PA_EN_PIN, HIGH);          // idempotent; amp is kept on from begin()
   const int N = 256;
   int16_t buf[N];
   size_t off = 0, wrote;
-  // Short silence lead-in so the very start of the clip isn't clipped.
+  // Enable the amp only for this playback (off when idle saves real power/heat).
+  // It needs a full ramp first, so stream ~190ms of silence before the clip —
+  // a shorter warm-up left short clips inaudible on a cold amp.
+  digitalWrite(PA_EN_PIN, HIGH);
   memset(buf, 0, sizeof(buf));
-  for (int k = 0; k < 2; k++) i2s_write(PORT, buf, sizeof(buf), &wrote, portMAX_DELAY);
+  for (int k = 0; k < 12; k++) i2s_write(PORT, buf, sizeof(buf), &wrote, portMAX_DELAY);
   while (off < n) {
     int m = (int)min((size_t)N, n - off);
     for (int i = 0; i < m; i++) buf[i] = (int16_t)(src[off + i] * gain);
     i2s_write(PORT, buf, m * sizeof(int16_t), &wrote, portMAX_DELAY);
     off += m;
   }
-  i2s_zero_dma_buffer(PORT);              // trailing silence; leave PA on
+  i2s_zero_dma_buffer(PORT);
+  delay(4);
+  digitalWrite(PA_EN_PIN, LOW);           // amp OFF when idle — saves power/heat
 }
 
 void alert() { playClip(snd_alert_pcm, snd_alert_pcm_len, 0.4f); }  // custom chirp @50%
