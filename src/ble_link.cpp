@@ -169,4 +169,16 @@ bool nextLine(String &out) {
 
 void eraseBonds() { NimBLEDevice::deleteAllBonds(); }
 
+// Safety net: after an out-of-range drop, NimBLE doesn't always come back
+// advertising, so the desktop can't find us again. Whenever we're not
+// connected and not advertising, (re)start advertising. Called from the loop.
+void ensureAdvertising() {
+  if (g_state.connected) return;
+  NimBLEAdvertising *adv = NimBLEDevice::getAdvertising();
+  if (adv && !adv->isAdvertising()) {
+    adv->start();
+    Serial.println("[ble] re-advertising (was idle)");
+  }
+}
+
 } // namespace ble

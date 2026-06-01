@@ -26,9 +26,9 @@
 
 #define LCD_WIDTH   410
 #define LCD_HEIGHT  502
-#define LCD_BRIGHTNESS 80   // 0..255 active brightness (lower = cooler/less power)
+#define LCD_BRIGHTNESS 120   // 0..255 active brightness (lower = cooler/less power)
 // Idle dimming to cut heat/power on this always-on AMOLED.
-#define BRIGHT_ACTIVE   80
+#define BRIGHT_ACTIVE   120
 #define BRIGHT_DIM       28
 #define IDLE_DIM_MS    30000UL   // dim after 30s with no touch / prompt
 #define IDLE_OFF_MS   120000UL   // panel ~off after 2 min

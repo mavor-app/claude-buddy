@@ -111,6 +111,11 @@ void loop() {
   bool touched = pollTouch();
   bool panelOff = manageBrightness(touched);
 
+  // Keep us discoverable: if we got dropped (e.g. walked out of range), make
+  // sure advertising is running again so the desktop can auto-reconnect.
+  static uint32_t lastAdvChk = 0;
+  if (millis() - lastAdvChk > 1000) { lastAdvChk = millis(); ble::ensureAdvertising(); }
+
   // log battery % every 5s so we can watch the drain rate improve (AXP2101 has
   // no current ADC, so % trend is our only readout).
   static uint32_t lastPwr = 0;

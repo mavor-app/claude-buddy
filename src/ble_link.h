@@ -9,4 +9,5 @@ namespace ble {
   void send(const String &line);      // notify TX (no-op if not subscribed)
   bool nextLine(String &out);         // pop one reassembled inbound line; false if none
   void eraseBonds();                  // {"cmd":"unpair"}
+  void ensureAdvertising();           // re-advertise if disconnected (call from loop)
 }
