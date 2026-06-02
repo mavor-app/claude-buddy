@@ -29,6 +29,7 @@ struct AppState {
   uint32_t  lastSnapshotMs = 0;
   uint32_t  snapCount = 0;         // total heartbeats received (debug)
   uint32_t  rxBytes = 0;           // total bytes received over RX (debug)
+  uint16_t  disconnects = 0;       // BLE drop count this boot (debug)
 
   // pairing
   bool      showPasskey = false;

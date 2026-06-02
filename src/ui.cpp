@@ -141,12 +141,15 @@ static void drawHome() {
   // DEBUG: connection + RX activity, so we can see if the desktop is actually
   // delivering data. rx = bytes received, s = snapshots parsed, age = seconds
   // since last snapshot. If rx stays 0 -> nothing is reaching us over GATT.
+  // dbg: C/- connected · d<N> drops this boot · h<N>k free heap · up<N>s uptime.
+  //   - d climbs but up keeps rising  -> clean BLE drops (link/range)
+  //   - d resets to 0 and up resets   -> device crashed/rebooted
+  //   - h keeps falling               -> memory leak
   char dbg[64];
-  uint32_t age = g_state.snapCount ? (millis() - g_state.lastSnapshotMs) / 1000 : 0;
-  snprintf(dbg, sizeof(dbg), "%s%s rx%lu s%lu %lus",
-           g_state.connected ? "C" : "-", g_state.encrypted ? "E" : "-",
-           (unsigned long)g_state.rxBytes, (unsigned long)g_state.snapCount,
-           (unsigned long)age);
+  snprintf(dbg, sizeof(dbg), "%s d%u h%uk up%lus",
+           g_state.connected ? "C" : "-", g_state.disconnects,
+           (unsigned)(ESP.getFreeHeap() / 1024),
+           (unsigned long)((millis() - g_state.bootMs) / 1000));
   centerText(dbg, H - 22, C_DIM, 1);
 }
 

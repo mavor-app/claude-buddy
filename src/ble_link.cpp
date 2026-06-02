@@ -48,11 +48,9 @@ class ServerCallbacks : public NimBLEServerCallbacks {
   void onConnect(NimBLEServer *s, ble_gap_conn_desc *desc) override {  // 2.x: (s, connInfo)
     g_state.connected = true;
     NimBLEDevice::setMTU(247);
-    // Stability: request a generous supervision timeout (6s) so a brief loop
-    // stall (full-canvas flush ~20ms, audio playback ~200ms) never trips a
-    // spurious disconnect. 15-30ms interval keeps approvals snappy; latency 0.
-    // (min/max interval in 1.25ms units, timeout in 10ms units.)
-    s->updateConnParams(desc->conn_handle, 12, 24, 0, 600);
+    // NOTE: do NOT force connection params here — macOS is picky and rejecting
+    // them dropped the link right after connect ("scan finds it, can't
+    // connect"). Use whatever the central negotiates.
     Serial.printf("[ble] connect: encrypted=%d bonded=%d\n",
                   desc->sec_state.encrypted, desc->sec_state.bonded);
     // Show our (known, static-this-boot) passkey as soon as a non-bonded
@@ -69,6 +67,7 @@ class ServerCallbacks : public NimBLEServerCallbacks {
     g_state.connected = false;
     g_state.encrypted = false;
     g_state.showPasskey = false;
+    g_state.disconnects++;
     rxAccum.clear();
     Serial.println("[ble] disconnect; re-advertising");
     NimBLEDevice::startAdvertising();

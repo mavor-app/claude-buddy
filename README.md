@@ -8,6 +8,10 @@ or touchscreen, and displays a live session overview.
 Built from scratch against the documented BLE cable protocol — **not** a fork of
 the M5StickC firmware.
 
+| Home / session overview | Permission request |
+| --- | --- |
+| ![Home screen](imgs/main.jpg) | ![Permission approval](imgs/request.jpg) |
+
 ## Build
 
 PlatformIO:

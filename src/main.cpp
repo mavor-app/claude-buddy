@@ -79,7 +79,7 @@ void setup() {
   delay(200);
   Serial.println("\n[boot] Claude Hardware Buddy");
 
-  setCpuFrequencyMhz(80);    // 80MHz: big CPU power cut; ample for BLE+QSPI here
+  setCpuFrequencyMhz(160);   // 80MHz broke BLE GATT discovery; 160 is reliable
   g_state.bootMs = millis();
   st::begin();                       // stats + settings + names from NVS
 
@@ -122,8 +122,9 @@ void loop() {
   if (millis() - lastPwr > 5000) {
     lastPwr = millis();
     BatteryInfo b = power::read();
-    Serial.printf("[pwr] %d%% %dmV usb=%d %uMHz panel=%s\n",
-                  b.pct, b.mV, b.usb, getCpuFrequencyMhz(), panelOff ? "off" : "on");
+    Serial.printf("[pwr] %d%% %dmV usb=%d %uMHz panel=%s heap=%u conn=%d\n",
+                  b.pct, b.mV, b.usb, getCpuFrequencyMhz(), panelOff ? "off" : "on",
+                  (unsigned)ESP.getFreeHeap(), g_state.connected);
   }
 
   // Redraw only as fast as the buddy actually animates (5 fps); flushing more
