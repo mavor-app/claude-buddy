@@ -172,7 +172,10 @@ void eraseBonds() { NimBLEDevice::deleteAllBonds(); }
 // advertising, so the desktop can't find us again. Whenever we're not
 // connected and not advertising, (re)start advertising. Called from the loop.
 void ensureAdvertising() {
-  if (g_state.connected) return;
+  // Use the controller's real connection count, NOT g_state.connected — the
+  // flag lags the callback, and acting in that window restarted advertising
+  // mid-handshake, churning the link and wedging the desktop app.
+  if (!server || server->getConnectedCount() > 0) return;
   NimBLEAdvertising *adv = NimBLEDevice::getAdvertising();
   if (adv && !adv->isAdvertising()) {
     adv->start();
